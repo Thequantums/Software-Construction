@@ -1,0 +1,48 @@
+1) created a log using vi
+
+2) cd diffutils
+   git checkout v3.0 -b hw
+
+3)Install the patch to the new branch
+patch -p1 < quote-3.0-patch.txt
+
+patching file src/cmp.c
+patching file src/diff.c
+patching file src/diff3.c
+patching file src/dir.c
+patching file src/sdiff.c
+patching file src/util.c
+
+
+4) & 5) commands: emacs
+	C-x 4-a
+	write comment to changlog
+	C-x C-c
+
+6) commit the newly patched branch with changlog message
+	command: git add .
+		 git commit -F ChangeLog
+
+7) Generate a format patch
+command : git format-patch -1 --stdout > formatted-patch.txt
+
+8) My partner is JaylenMaley ID: 305178280.
+
+First i created a new branch
+git checkout -b 'jaylen' 'v3.0'
+
+To apply patch:
+git am formmated-patch.txt
+./bootstrap
+./configure
+make
+make check
+
+9) To verify the changlog worked, use the command distdir
+command: make distdir
+	emacs ChangeLog
+
+10) Now inspect the master branch. First open a new server. and change directory to ~eggert/src/gnu/emacs
+command: cd ~/eggert/src/gnu/emacs
+	 gitk
+

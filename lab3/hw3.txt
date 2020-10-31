@@ -1,0 +1,13 @@
+Q1) The patch made the performance of ls slower. Because there is additional case test to check for -A for overriding the -a option in order to ignore "." ".."
+
+Q2) The bug wasnt officially a bug until POSIX.1-2008 came out that specifies -a and -A should override each other; based on message from prof. Eggert. So, there shouldnt be issue if we stick to POSIX.1-2008 rules. If the POSIX changes, something could be regared as bug again. However, the -A after -f ouputs "." in front of hidden files.
+
+Q3)There is an error occured called IndexError: List index out of range. The error happened in the line 34 in chooseline contains the code: return random.choice(self.lines). The error is resulted from random.py library line 274 with the code: return seq[int(self.random() * len(seq))] # raised indexError if seq is empty. It is dued to the fact that self.lines is empty and there is no arguments passed to random to choice. When invoked, the command doesnt promt stdin arguments because /dev/null is also a file.
+
+Q4)When invoked on python3 by import #!usr/local/cs/bin/python3.7, there is an error occured:
+File "./randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+It is dued to the fact that python 3 doesnt support automatic tuple unpacking. Therefore, (errno,strerror) passed resulted in syntax error.
+

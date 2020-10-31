@@ -1,0 +1,160 @@
+1) First i need to clone the repository from prof. eggert
+	git clone ~eggert/src/gnu/diffutils
+
+2) cd diffutils and git log > git-log.txt to get all the log and write into git-log.txt
+
+3) write tags history to git-tags.txt
+git tag > git-tags.txt
+
+4) To get the hash code of commit to form a patch, i had to go to log and search for key word maint: qu.
+  COMMAND: git format-patch -1 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f --stdout > quote-patch.txt
+
+5) checkout to v3.0
+git checkout v3.0
+
+6) now we can apply the patch to the old version 3.0, by
+	patch -p1 < quote-patch.txt
+
+	while appling the patch, there are some errors occured because patch can find files.
+LED at 9.
+Hunk #3 FAILED at 60.
+2 out of 3 hunks FAILED -- saving rejects to file README.rej
+patching file README-hacking
+Hunk #1 FAILED at 19.
+1 out of 1 hunk FAILED -- saving rejects to file README-hacking.rej
+patching file TODO
+patching file cfg.mk
+Hunk #1 FAILED at 29.
+1 out of 1 hunk FAILED -- saving rejects to file cfg.mk.rej
+3 out of 14 hunks FAILED -- saving rejects to file src/diff.c.rej
+1 out of 9 hunks FAILED -- saving rejects to file src/diff3.c.rej
+
+
+7) git status
+
+# HEAD detached at v3.0
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#       modified:   NEWS
+#       modified:   README
+#       modified:   TODO
+#       modified:   doc/diagmeet.note
+#       modified:   ms/config.bat
+#       modified:   ms/config.site
+#       modified:   po/en.po
+#       modified:   src/analyze.c
+#       modified:   src/cmp.c
+#       modified:   src/context.c
+#       modified:   src/diff.c
+#       modified:   src/diff.h
+#       modified:   src/diff3.c
+#       modified:   src/dir.c
+#       modified:   src/ifdef.c
+#       modified:   src/io.c
+#       modified:   src/sdiff.c
+#       modified:   src/side.c
+#       modified:   src/system.h
+#       modified:   src/util.c
+#       modified:   tests/help-version
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#       NEWS.orig
+#       README-hacking.orig
+#       README-hacking.rej
+#       README.orig
+#       README.rej
+#       cfg.mk.orig
+#       cfg.mk.rej
+#       ms/config.site.orig
+#       quote-patch.txt
+#       src/cmp.c.orig
+#       src/context.c.orig
+#       src/diff.c.orig
+#       src/diff.c.rej
+#       src/diff.h.orig
+#       src/diff3.c.orig
+#       src/diff3.c.rej
+#       src/dir.c.orig
+#       src/sdiff.c.orig
+#       src/system.h.orig
+#       src/util.c.orig
+#       tests/help-version.orig
+no changes added to commit (use "git add" and/or "git commit -a")
+
+
+8) learning commands from specs.
+
+9) for files that were modified other than .c files, NEWS, README, TODO, ms/config.bat, ms/config.site
+    src/diff.h, src/system.h, test/help-version, po/en.po, doc/diagmeet.note
+	i ran to each file emacs files
+	revert all changes: C-x v-u
+			   save yes
+	exit:		   C-x C-c
+
+	for files with the .c extension
+	opening vc-diff, command: C-x v =
+	use n to go through each hunk
+	revert all the hunk that were applied  C-u C-c C-a with except to string constant
+	C-x C-c to exit and save y
+
+10) Now there are 2 files to be modified from ` to '. They are src/diff.c and src/diff3.c 
+	emacs src/diff3.c.rej  and find the line that need to be changed
+	emacs src/diff3.c 
+	emacs src/diff.c
+	and manually change the ` to ' in the comment specified by .rej files above
+
+
+11) we can remove all the untracked files by git clean -f
+
+
+
+12) running the git status command
+
+ HEAD detached at v3.0
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#       modified:   src/cmp.c
+#       modified:   src/diff.c
+#       modified:   src/diff3.c
+#       modified:   src/dir.c
+#       modified:   src/sdiff.c
+#       modified:   src/util.c
+#
+no changes added to commit (use "git add" and/or "git commit -a")
+To make a new patch 3.0, command git diff > quote-3.0-patch.txt
+
+
+13) To make the program, i ran it in linux09. so i export PATH=/usr/local/cs/bin:$PATH.
+ran command: ./bootstrap
+	     ./configure
+
+then apply the patch patch -p0 < diffutils-gets.diff
+
+command: make
+	make check
+
+In the same directory, i test the diff . - command and got a '-' which is correct.
+				  diff --help also output correct format.
+
+
+14) Sanity test. i copied source of the new 3.0 patch and the original diff to the same directory.
+	mkdir test
+	cp -r src ~/cs35l/hw9/test/diffutils-3.0-patch
+	cd test
+	git clone ~eggert/src/gnu/diffutils
+	cd diffutils
+	cp -r src ~/cs35l/hw9/test/diffutils-3.0
+	~/cs35l/hw9/diffutils/src/diff - pru diffutils-3.0 diffutils-3.0-patch > quote-3.0-test.txt
+
+15) The diff command which compares and output differences between the two files actually output alot of differences between the two.
+command: diff -u quote-3.0-test.txt quote-3.0-patch.txt
+output many differences.
+
+
+

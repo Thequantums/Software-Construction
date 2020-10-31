@@ -1,0 +1,85 @@
+I created a new directory and used wget to download the source file and extract the tar.gz file.
+command: wget http://web.cs.ucla.edu/classes/winter19/cs35L/assign/coreutils-with-bug.tar.gz
+tar -xzvf coreutls-with-bug.tar.gz
+
+I then configure the coreutils-with-bug.
+command: ./configure --prefix=/u/ee/ugrad/sokchetr/oldcoreutils_ls
+	make
+
+I ran into error reported as:
+
+In file included from utimecmp.c:41:0:
+utimens.h:2:5: error: conflicting types for 'futimens'
+ int futimens (int, char const *, struct timespec const [2]);
+     ^
+In file included from utimecmp.h:25:0,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+ extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+
+The error occured due to two function with the same names. One is a global function with extern int futimes. It caused linking problem when compiled. So, i downloaded the patch from the website using wget.
+Commands: wget http://web.cs.ucla.edu/classes/winter19/cs35L/assign/coreutils.diff
+	  patch -p0 < coreutils.diff
+	  make 
+	  make install
+
+After that, i can produce the probelm that is caused by ls -t.
+command: $ tmp=$(mktemp -d)
+$ cd $tmp
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice
+$ touch now
+$ sleep 1
+$ touch now1
+$ ~/oldcoreutils_ls/bin/ls -lt --full-time wwi-armistice now now1
+
+-rw-r--r-- 1 sokchetr eeugrad 0 1918-11-11 03:00:00.000000000 -0800 wwi-armistic              e
+-rw-r--r-- 1 sokchetr eeugrad 0 2019-02-07 23:22:41.845178214 -0800 now1
+-rw-r--r-- 1 sokchetr eeugrad 0 2019-02-07 23:22:31.198996152 -0800 now
+
+
+To debug the problem, i used gdb. First i cd to ~/oldcoreutils_ls/bin and gdb ls.
+command: info functions - to get all the functions
+	 break point compare_mtime
+	 run
+	 stepi  - step instruction to the function
+stepi to compare_mtime leads to cmp_mtime which calls timespec_cmp in timespec_cmp (b=..., a=...) at ../lib/timespec.h:49
+
+         Assume the nanosecond components are in range, or close to it.  */
+45      static inline int
+46      timespec_cmp (struct timespec a, struct timespec b)
+47      {
+48        int diff = a.tv_sec - b.tv_sec;
+49        return diff ? diff : a.tv_nsec - b.tv_nsec;
+50      }
+
+From inspecting the function, we can see it is caused by overflow of substraction operation a.tv_sec - b.tv_sec
+
+To fix this, cd lib, cp timespec.h timespec1.h and change the timespec1.h with the following logic:
+  if ( a.tv_sec > b.tv_sec ) return 1;
+  if ( a.tv_sec == b.tv_sec) return 0;
+  if ( a.tv_sec < b.tv_sec)  return -1;
+
+Now i can apply the patch.
+
+Command: diff -u timespec.h timespec1.h > lab4.diff
+	 Then i needed to changelog in the lab4.diff using emacs
+	 emacs lab4.diff
+	 C-x 4-a
+
+Now i reproduced bugs in seasnet.
+
+commands: mkdir tmp
+	  cd tmp
+	  touch -d '1918-11-11 11:00 GMT' wwi-armistice
+	  touch now
+	  sleep 1
+	  touch now1
+	  ls -lt --full-time wwi-armistice now now1
+
+[sokchetr@lnxsrv09 ~/tmp]$ ~/oldcoreutils_ls/bin/ls -lt --full-time wwi-armistice now now1
+-rw-r--r-- 1 sokchetr eeugrad 0 2054-12-17 09:28:16.000000000 -0800 wwi-armistice
+-rw-r--r-- 1 sokchetr eeugrad 0 2019-02-08 00:17:41.835336000 -0800 now1
+-rw-r--r-- 1 sokchetr eeugrad 0 2019-02-08 00:17:33.955611000 -0800 now
+
+The seasnet still produced a problem with wrong date 2054-12-17. It is because of time stamp difference. On seasnet NFS filesystem has unsigned 32-bit time stamps, every date before 1970 will produced overflow to positive side which returns to future time. However, in local file system on seasnet has signed 32-bit time stamps which can overflow to negative side which is in the past.
+

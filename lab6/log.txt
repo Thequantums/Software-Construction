@@ -1,0 +1,43 @@
+check the version of the sort by sort --version
+sort (GNU coreutils) 8.22 which supports multi-threading sort.
+
+
+Now create a file called rfloats.txt that contains single-precision floating point for 2^24 numbers.
+Command: num=$(echo 4*(2^24) | bc). This is to calculate the number of bytes of 2^24 floating points since each fp has 4 bytes.
+
+Command: od -An -t fF -N $num < /dev/urandom | tr -s ' ' '\n' | sed '/^$/d' > rfloats.txt 
+The -An option to specifies the offet of the address base wont be written, the -t fF to specify floating point, -N $num to put how many bytes are there in the file. the tr translates sequences of ' ' with one \n new line and the sed delele any empty lines.
+
+Now we can sort the file by using command sort with -g option with specific number of --parallel=4,8,16
+
+running with 1 thread
+command: time -p sort -g rfloats.txt > /dev/null
+real 39.38
+user 207.38
+sys 3.22
+
+running with 2 thread
+command: time -p sort -g --parallel=2 rfloats.txt > /dev/null
+
+
+running with 4 threads:
+command: time -p sort -g --parallel=4 rfloats.txt > /dev/null
+real 61.71
+user 204.75
+sys 2.45
+
+runnging with 8 threads:
+command: time -p sort -g --parallel=8 rfloats.txt > /dev/null
+real 39.39
+user 208.77
+sys 3.39
+
+running with 16 threads:
+command: time -p sort -g --parallel=16 rfloats.txt > /dev/null
+real 29.72
+user 223.51
+sys 3.76
+
+
+From the timing of the sort command with different number of threads, there is a clear relation as number of threads increases, it decreases the real time which is the actual time spend running the process from start to finish. This means the sort command executes faster with increased number of threads. But it has a limit. However, the user time also increases as the number of threads increases because it is the accumulative time spent by all threads. since we increases threads, cpu needs to spend more time allocating stack, registers and instruction pointer for each threads. The system calls time also increased as each creation of threads demands system call.
+ 

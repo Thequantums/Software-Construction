@@ -1,0 +1,222 @@
+1) check the locale of the directory by locale. 
+export LC_ALL ='C' to make POSIX locale
+
+2) sort /usr/share/dict/words > words. to sort all the words inside the file and input it to words file.
+
+3) download the assign2.html page from class website by wget http://web.cs.ucla.edu/classes/winter19/cs35L/assign/assign2.html. and i got assig2.html file.
+
+4) running commands: 
+
+a) tr -c 'A-Za-z' '[\n*]' < assign2.html
+
+This tr command translates any characters including digits, space except upperand lower case alphabetical letters A-Z or a-z to new lines. if one character matches the above command, tr translates it to a new line.
+
+b)tr -cs 'A-Za-z' '[\n*]' < assign2.html
+
+The -cs option replaces any characters except upper or lower case letters to one. That's why when we run the command, it only placed one end line to any characters except alphabetical letters rather many empty lines as previous command which was resulted from many repeated characters except 'A-Za-z'.
+
+c) tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+
+This command sort the result of previous command in alphabetical orders from a to z. it pipes to sort.
+
+d)tr -cs 'A-Za-z' '[\n*] | sort -u
+This command sort the result of the command in part b and only print the unique words sorted which means only one of the repeated sorted word is printed.
+
+e)tr - cs 'A-Za-z' '[\n]' | sort -u | comm - words
+This command compare the result of the previous command of part d with words file. it listed all the words found in each file in ascending orders without repeatation of words. the first colomn is from first file and the second colomn is from the second file and the third file appear in both files.
+
+f) tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words
+This command only prints the words from part d in ascending order in first colomn.
+
+
+Part 2)
+
+wget http://mauimapp.com/moolelo/hwnwdseng.htm to get the file.
+
+#!/bin/bash
+
+#print onlu the words with <td> ... </td>
+grep -o '<td>.*<\/td>' |
+
+#replace all html tags by looking at the begining of line or > with no character
+sed 's/<[^>]*>//g' |
+
+#delete all empty lines
+sed '/./!d' |
+
+#delete odds lines that contain english words
+sed '1d; n; d' |
+
+#replace globally , with new line to seperate words
+sed 's/\,/\n/g' |
+
+#replace space between words on the same line with new line
+sed 's/ /\n/g' |
+
+#delete empty lines by using ^ as start fo line and $ as end line
+sed '/^$/d' |
+
+#replace ~ with ' need to use esc to make  ' and ~ a non special character
+sed s/\`/\'/g |
+
+#replace uppercase character to lowercase character
+sed -e 's/\(.*\)/\L\1/' |
+
+#delete -
+sed '/-/d' |
+
+#delete words that dont have hawaiian alphabet by specifying "pk\'mnklhaeiou"
+tr -cs "pk\'mnwlhaeiou" '[\n*]' |
+
+#sort the list and print only unique words
+sort -u
+
+cat hwnwdseng.htm | ./buildwords >hwords
+
+To check for miss spelled english words on assign2.html, i ran this command
+cat assign2.html | sed -e 's/\(.*\)/\L\1/' | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words > missspelleng
+the sed -e 's/\(.*\)/\L\1/' is to convert upper case to lower case
+the last command is to check any words that doesnt have english alphabets to print it
+and run this to count how many words inside the file 
+wc -w misspelleng
+42 misspelleng - there are 42 missspelled english words
+
+to check for missspelled hawaiian words on assign2.html, i used hwords as dictionary, and found 215 misspelled haiwainian words by running similar command to english spell checker but with "pk\'mnwlhaeiou" as string argument
+cat assign2.html | sed -e 's/\(.*\)/\L\1/' | tr -cs "pk\'mnwlhaeiou" '[\n*]' | sort -u | comm  -23 - hwords > missspellha
+ wc -w missspellha
+215 missspellha
+
+to check for misspelled hawaiian words in misspelleng file, i ran similar command to above
+cat missspelleng | sed -e 's/\(.*\)/\L\1/' | tr -cs "pk\'mnwlhaeiou" '[\n*]' | sort -u | comm  -12 - hwords
+e
+halau
+i
+lau
+po
+wiki
+i found 6 missspelled haiwaiin words in missspelleng file
+
+to check for misspelled english words in missspellha, i ran command similar to above for checking misspelled hawaiian
+ cat missspellha | sed -e 's/\(.*\)/\L\1/' | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm  -12 - words
+a
+ail
+ain
+ake
+al
+ale
+alen
+all
+am
+amp
+ample
+an
+aph
+awk
+e
+ea
+ee
+el
+em
+emp
+en
+ep
+epa
+h
+ha
+han
+hap
+hawaiian
+he
+hei
+hell
+hem
+hen
+hi
+hin
+ho
+home
+how
+howe
+ia
+ie
+ii
+ile
+imp
+in
+io
+ion
+iou
+k
+keep
+kin
+l
+lan
+le
+lea
+li
+like
+line
+lo
+look
+lowe
+m
+mail
+main
+me
+men
+mi
+ml
+mo
+n
+name
+ne
+nee
+newline
+no
+non
+none
+nu
+nul
+num
+o
+oke
+ol
+om
+on
+one
+op
+ope
+open
+own
+p
+paul
+pe
+pell
+pi
+plain
+plea
+pu
+u
+ui
+ula
+ule
+ume
+ump
+un
+uni
+up
+w
+wa
+wan
+we
+well
+wh
+wha
+when
+who
+wi
+will
+wo
+
+and found a bunch of misspelled english words
+

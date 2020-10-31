@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#taking arguments and use for loop to iterate untill end of arguments
+for arg in "$@"
+do 
+	if [ -d "${arg}" ]; then
+	  #if the argument is a directory, it will recursively print names of ascii file.
+		grep -rLP '[^\x80-\xFF]' $arg | xargs grep -l '\-\*\- coding\: utf\-8 \-\*\-'	
+	else
+	  #if the argument is a file
+		if [[ "$(file "$arg")" =~ ': utf-8 text '$ ]]; then
+			#if it is an ascii file, pipe it to ascii.txt
+			 head -1 $arg | grep -l '\-\*\- coding\: utf\-8 \-\*\-' $arg
+		fi	
+	fi
+done	

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#print onlu the words with <td> ... </td>
+grep -o '<td>.*<\/td>' |
+
+#replace all html tags by looking at the begining of line or > with no character  
+sed 's/<[^>]*>//g' |
+
+#delete all empty lines
+sed '/./!d' |
+
+#delete odds lines that contain english words
+sed '1d; n; d' |
+
+#replace globally , with new line to seperate words
+sed 's/\,/\n/g' |
+
+#replace space between words on the same line with new line
+sed 's/ /\n/g' |
+
+#delete empty lines
+sed '/^$/d' |
+
+#replace ~ with '
+sed s/\`/\'/g |
+
+#replace uppercase character to lowercase character
+sed -e 's/\(.*\)/\L\1/' |
+
+#delete - 
+sed '/-/d' |
+
+#delete words that dont have hawaiian alphabet
+tr -cs "pk\'mnwlhaeiou" '[\n*]' |
+
+#sort the list and print only unique words
+sort -u
